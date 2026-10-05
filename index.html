@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Offline TikTok Video Player</title>
+  <meta name="description" content="100% Offline TikTok-style vertical video player. Center play/pause, lower right fullscreen, lower left rotate video, speed controls, folder loading.">
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Ambient background glow for wide / desktop / fullscreen view -->
+  <div id="ambient-canvas-wrapper" class="ambient-wrapper" aria-hidden="true">
+    <div id="ambient-backdrop" class="ambient-backdrop"></div>
+  </div>
+
+  <!-- Main App Shell -->
+  <main id="app-container" class="app-container">
+
+    <!-- Auto-hiding Controls Layer (Pure Video Focus) -->
+    <div id="controls-layer" class="controls-layer visible">
+      
+      <!-- Top Bar Navigation -->
+      <header class="top-bar" id="top-bar">
+        <div class="top-bar-left">
+          <!-- Playlist Toggle Button (Perfect Circle) -->
+          <button id="btn-playlist-toggle" class="icon-btn" title="Open Playlist" aria-label="Playlist">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="8" y1="6" x2="21" y2="6"></line>
+              <line x1="8" y1="12" x2="21" y2="12"></line>
+              <line x1="8" y1="18" x2="21" y2="18"></line>
+              <line x1="3" y1="6" x2="3.01" y2="6"></line>
+              <line x1="3" y1="12" x2="3.01" y2="12"></line>
+              <line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+          </button>
+
+          <!-- Video Counter: Perfect Round Pill -->
+          <div id="video-counter" class="video-counter-pill" title="Current video / Total videos">
+            <span id="counter-current">0</span><span class="counter-sep">/</span><span id="counter-total">0</span>
+          </div>
+        </div>
+
+        <div class="top-bar-right">
+          <!-- Auto-Next / Loop Toggle Button -->
+          <button id="btn-loop-mode" class="loop-pill-btn" title="Toggle Auto-Next vs Loop 1 (L)" aria-label="Auto-Next or Loop">
+            <svg id="icon-mode-autonext" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="17 1 21 5 17 9"></polyline>
+              <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+              <polyline points="7 23 3 19 7 15"></polyline>
+              <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+            </svg>
+            <svg id="icon-mode-loop" class="hidden" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="17 1 21 5 17 9"></polyline>
+              <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+              <polyline points="7 23 3 19 7 15"></polyline>
+              <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+              <circle cx="12" cy="12" r="3" fill="currentColor"></circle>
+            </svg>
+            <span id="loop-mode-label">Auto-Next</span>
+          </button>
+
+          <!-- Playback Speed Menu Trigger (1.5x, 1.75x, 2.0x, 2.5x, 3.0x, 3.5x, 4.0x) -->
+          <div class="speed-menu-wrapper" id="speed-menu-wrapper">
+            <button id="btn-speed" class="speed-btn" title="Change Playback Speed (S)" aria-label="Speed">
+              <span id="speed-label">1.0x</span>
+            </button>
+            <div id="speed-dropdown" class="speed-dropdown hidden" role="menu">
+              <button class="speed-option active" data-speed="1.0">1.0x (Normal)</button>
+              <button class="speed-option" data-speed="1.5">1.5x</button>
+              <button class="speed-option" data-speed="1.75">1.75x</button>
+              <button class="speed-option" data-speed="2.0">2.0x</button>
+              <button class="speed-option" data-speed="2.5">2.5x</button>
+              <button class="speed-option" data-speed="3.0">3.0x</button>
+              <button class="speed-option" data-speed="3.5">3.5x</button>
+              <button class="speed-option" data-speed="4.0">4.0x</button>
+            </div>
+          </div>
+
+          <!-- Load Folder Button -->
+          <button id="btn-open-folder" class="load-btn" title="Load whole folder of videos" aria-label="Load Folder">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              <line x1="12" y1="11" x2="12" y2="17"></line>
+              <line x1="9" y1="14" x2="15" y2="14"></line>
+            </svg>
+            <span>Folder</span>
+          </button>
+
+          <!-- Audio Mute / Unmute Button -->
+          <button id="btn-mute" class="icon-btn" title="Mute / Unmute (M)" aria-label="Audio">
+            <svg id="icon-sound-on" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            </svg>
+            <svg id="icon-sound-off" class="hidden" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="1" y1="1" x2="23" y2="23"></line>
+              <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path>
+              <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"></path>
+              <line x1="12" y1="19" x2="12" y2="23"></line>
+              <line x1="8" y1="23" x2="16" y2="23"></line>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Center of Video: Play / Pause Button -->
+      <div class="center-play-wrapper">
+        <button id="btn-center-playpause" class="center-playpause-btn" title="Play / Pause (Space or Tap Video)" aria-label="Play or Pause">
+          <svg id="icon-center-play" viewBox="0 0 24 24" width="36" height="36" fill="white">
+            <polygon points="7 4 20 12 7 20 7 4"></polygon>
+          </svg>
+          <svg id="icon-center-pause" class="hidden" viewBox="0 0 24 24" width="36" height="36" fill="white">
+            <rect x="6" y="4" width="4" height="16" rx="1.5"></rect>
+            <rect x="14" y="4" width="4" height="16" rx="1.5"></rect>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Lower Controls Floating Bar (Above Scrubber) -->
+      <div class="lower-controls-bar">
+        <!-- Lower Left Corner: Rotate Video Button -->
+        <button id="btn-rotate" class="icon-btn lower-corner-btn rotate-btn" title="Rotate Video 90° (R)" aria-label="Rotate Video">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+        </button>
+
+        <!-- Lower Right Corner: Fullscreen Button -->
+        <button id="btn-fullscreen" class="icon-btn lower-corner-btn fullscreen-btn" title="Toggle Fullscreen (F)" aria-label="Fullscreen">
+          <svg id="icon-fs-enter" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+          </svg>
+          <svg id="icon-fs-exit" class="hidden" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Bottom Video Scrub / Progress Bar -->
+      <div id="scrub-container" class="scrub-container">
+        <div class="scrub-track" id="scrub-track">
+          <div class="scrub-buffered" id="scrub-buffered"></div>
+          <div class="scrub-progress" id="scrub-progress"></div>
+          <div class="scrub-handle" id="scrub-handle"></div>
+        </div>
+        <div class="scrub-tooltip" id="scrub-tooltip">00:00</div>
+      </div>
+
+    </div>
+
+    <!-- Blank Starting Screen (Future Landing GIF / Video / Image Placeholder) -->
+    <section id="blank-screen" class="blank-screen">
+      <!-- Media placeholder container for future GIF / Video / Image -->
+      <div id="landing-media-container" class="landing-media-container">
+        <!-- Future landing GIF/Video/Image will go here -->
+      </div>
+
+      <!-- Minimal Initial Load Prompt (Always loads whole folder) -->
+      <div class="blank-center-action">
+        <button id="btn-blank-load-folder" class="btn btn-blank-load">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            <line x1="12" y1="11" x2="12" y2="17"></line>
+            <line x1="9" y1="14" x2="15" y2="14"></line>
+          </svg>
+          <span>Load Video Folder</span>
+        </button>
+        <button id="btn-demo-mode" class="btn-blank-demo">or Try Demo Videos</button>
+      </div>
+    </section>
+
+    <!-- Hidden Folder Picker and File Inputs -->
+    <input type="file" id="folder-input" webkitdirectory directory multiple style="display: none;">
+    <input type="file" id="file-input-multiple" multiple accept="video/*,.mp4,.webm,.ogg,.mov,.m4v,.mkv,.avi" style="display: none;">
+
+    <!-- Video Feed Container (TikTok Vertical Carousel) -->
+    <div id="feed-container" class="feed-container hidden" tabindex="0">
+      <!-- Active video slides injected dynamically -->
+    </div>
+
+    <!-- Floating Play/Pause Status Animation Indicator -->
+    <div id="play-pause-badge" class="play-pause-badge" aria-hidden="true">
+      <svg id="badge-play-icon" viewBox="0 0 24 24" width="52" height="52" fill="white">
+        <polygon points="6 4 20 12 6 20 6 4"></polygon>
+      </svg>
+      <svg id="badge-pause-icon" class="hidden" viewBox="0 0 24 24" width="52" height="52" fill="white">
+        <rect x="6" y="4" width="4" height="16" rx="1"></rect>
+        <rect x="14" y="4" width="4" height="16" rx="1"></rect>
+      </svg>
+    </div>
+
+    <!-- Zoom Level Indicator Badge (Shows when 2-finger pinching) -->
+    <div id="zoom-badge" class="zoom-badge" aria-hidden="true">1.0x</div>
+
+  </main>
+
+  <!-- Playlist Drawer Modal -->
+  <div id="playlist-drawer" class="drawer" aria-hidden="true">
+    <div class="drawer-backdrop" id="drawer-backdrop"></div>
+    <div class="drawer-panel">
+      <div class="drawer-header">
+        <div class="drawer-title-group">
+          <h2 class="drawer-title">Videos in Folder</h2>
+          <span class="drawer-subtitle" id="drawer-video-count">0 loaded</span>
+        </div>
+        <div class="drawer-header-actions">
+          <button id="btn-drawer-add-folder" class="btn btn-sm btn-outline">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+            Add Folder
+          </button>
+          <button id="btn-drawer-close" class="icon-btn" aria-label="Close drawer">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="drawer-body">
+        <ul id="playlist-items-list" class="playlist-items-list">
+          <!-- Dynamically populated -->
+        </ul>
+      </div>
+
+      <div class="drawer-footer">
+        <button id="btn-clear-all" class="btn btn-danger-link">Clear All</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Drag and drop whole-window visual dropzone -->
+  <div id="drag-drop-overlay" class="drag-drop-overlay" aria-hidden="true">
+    <div class="drag-drop-box">
+      <svg viewBox="0 0 24 24" width="54" height="54" fill="none" stroke="#25F4EE" stroke-width="2">
+        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+        <line x1="12" y1="11" x2="12" y2="17"></line>
+        <line x1="9" y1="14" x2="15" y2="14"></line>
+      </svg>
+      <h2>Drop Video Folder Here</h2>
+      <p style="color: rgba(255,255,255,0.6); font-size: 13px;">Automatically loads all videos inside</p>
+    </div>
+  </div>
+
+  <!-- Toast Notification System -->
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <script src="player.js"></script>
+</body>
+</html>
