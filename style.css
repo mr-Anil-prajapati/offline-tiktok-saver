@@ -631,71 +631,50 @@ body.is-fullscreen .video-slide.frame-landscape .video-element {
 }
 
 /* ==========================================================================
-   Center Play / Pause Button
+   Instagram-style Paused Center Overlay Indicator
    ========================================================================== */
-.center-play-wrapper {
+.paused-center-indicator {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: var(--z-overlay-pause);
-  pointer-events: none;
+  z-index: 25;
+  cursor: pointer;
+  pointer-events: auto;
+  user-select: none;
+  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.center-playpause-btn {
-  pointer-events: auto;
-  width: 74px;
-  height: 74px;
+.paused-center-indicator.hidden {
+  display: none !important;
+}
+
+.paused-circle-icon {
+  width: 76px;
+  height: 76px;
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.58);
-  backdrop-filter: blur(16px);
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(14px);
+  border: 2px solid rgba(255, 255, 255, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
   transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
-  color: #FFFFFF;
 }
 
-.center-playpause-btn:hover {
-  transform: scale(1.1);
-  background: rgba(0, 0, 0, 0.78);
-  border-color: rgba(255, 255, 255, 0.5);
-}
-
-.center-playpause-btn:active {
-  transform: scale(0.92);
-}
-
-.center-playpause-btn svg#icon-center-play {
+.paused-circle-icon svg {
   margin-left: 3px;
 }
 
-/* ==========================================================================
-   Lower Controls Bar (Corner Left Rotate & Corner Right Fullscreen)
-   ========================================================================== */
-.lower-controls-bar {
-  position: absolute;
-  bottom: 24px;
-  left: 14px;
-  right: 14px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  z-index: var(--z-controls);
-  pointer-events: none;
+.paused-circle-icon:hover {
+  transform: scale(1.1);
+  background: rgba(0, 0, 0, 0.78);
+  border-color: rgba(255, 255, 255, 0.6);
 }
 
-.lower-corner-btn {
-  pointer-events: auto;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
-}
-
-.rotate-btn:hover svg {
-  transform: rotate(-90deg);
-  transition: transform 0.3s ease;
+.paused-circle-icon:active {
+  transform: scale(0.92);
 }
 
 /* Floating animation feedback */

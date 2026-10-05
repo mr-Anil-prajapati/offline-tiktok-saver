@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Offline TikTok Video Player</title>
-  <meta name="description" content="100% Offline TikTok-style vertical video player. Center play/pause, lower right fullscreen, lower left rotate video, speed controls, folder loading.">
+  <meta name="description" content="100% Offline TikTok-style vertical video player. Instant Instagram-style tap play-pause, high-speed playback 1.5x to 4.0x, folder loading, auto framing.">
   <meta name="theme-color" content="#000000">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -37,6 +37,17 @@
             </svg>
           </button>
 
+          <!-- Top Bar Play / Pause Button (Perfect Circle) -->
+          <button id="btn-header-playpause" class="icon-btn" title="Play / Pause (Space or Tap Video)" aria-label="Play / Pause">
+            <svg id="icon-header-pause" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+              <rect x="6" y="4" width="4" height="16" rx="1"></rect>
+              <rect x="14" y="4" width="4" height="16" rx="1"></rect>
+            </svg>
+            <svg id="icon-header-play" class="hidden" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+              <polygon points="6 4 20 12 6 20 6 4"></polygon>
+            </svg>
+          </button>
+
           <!-- Video Counter: Perfect Round Pill -->
           <div id="video-counter" class="video-counter-pill" title="Current video / Total videos">
             <span id="counter-current">0</span><span class="counter-sep">/</span><span id="counter-total">0</span>
@@ -45,7 +56,7 @@
 
         <div class="top-bar-right">
           <!-- Auto-Next / Loop Toggle Button -->
-          <button id="btn-loop-mode" class="loop-pill-btn" title="Toggle Auto-Next vs Loop 1 (L)" aria-label="Auto-Next or Loop">
+          <button id="btn-loop-mode" class="loop-pill-btn" title="Toggle Auto-Next vs Loop 1" aria-label="Auto-Next or Loop">
             <svg id="icon-mode-autonext" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="17 1 21 5 17 9"></polyline>
               <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
@@ -64,7 +75,7 @@
 
           <!-- Playback Speed Menu Trigger (1.5x, 1.75x, 2.0x, 2.5x, 3.0x, 3.5x, 4.0x) -->
           <div class="speed-menu-wrapper" id="speed-menu-wrapper">
-            <button id="btn-speed" class="speed-btn" title="Change Playback Speed (S)" aria-label="Speed">
+            <button id="btn-speed" class="speed-btn" title="Change Playback Speed" aria-label="Speed">
               <span id="speed-label">1.0x</span>
             </button>
             <div id="speed-dropdown" class="speed-dropdown hidden" role="menu">
@@ -103,42 +114,18 @@
               <line x1="8" y1="23" x2="16" y2="23"></line>
             </svg>
           </button>
+
+          <!-- Fullscreen Button -->
+          <button id="btn-fullscreen" class="icon-btn" title="Toggle Fullscreen (F)" aria-label="Fullscreen">
+            <svg id="icon-fs-enter" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+            </svg>
+            <svg id="icon-fs-exit" class="hidden" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
+            </svg>
+          </button>
         </div>
       </header>
-
-      <!-- Center of Video: Play / Pause Button -->
-      <div class="center-play-wrapper">
-        <button id="btn-center-playpause" class="center-playpause-btn" title="Play / Pause (Space or Tap Video)" aria-label="Play or Pause">
-          <svg id="icon-center-play" viewBox="0 0 24 24" width="36" height="36" fill="white">
-            <polygon points="7 4 20 12 7 20 7 4"></polygon>
-          </svg>
-          <svg id="icon-center-pause" class="hidden" viewBox="0 0 24 24" width="36" height="36" fill="white">
-            <rect x="6" y="4" width="4" height="16" rx="1.5"></rect>
-            <rect x="14" y="4" width="4" height="16" rx="1.5"></rect>
-          </svg>
-        </button>
-      </div>
-
-      <!-- Lower Controls Floating Bar (Above Scrubber) -->
-      <div class="lower-controls-bar">
-        <!-- Lower Left Corner: Rotate Video Button -->
-        <button id="btn-rotate" class="icon-btn lower-corner-btn rotate-btn" title="Rotate Video 90° (R)" aria-label="Rotate Video">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="23 4 23 10 17 10"></polyline>
-            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-          </svg>
-        </button>
-
-        <!-- Lower Right Corner: Fullscreen Button -->
-        <button id="btn-fullscreen" class="icon-btn lower-corner-btn fullscreen-btn" title="Toggle Fullscreen (F)" aria-label="Fullscreen">
-          <svg id="icon-fs-enter" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
-          </svg>
-          <svg id="icon-fs-exit" class="hidden" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
-          </svg>
-        </button>
-      </div>
 
       <!-- Bottom Video Scrub / Progress Bar -->
       <div id="scrub-container" class="scrub-container">
@@ -180,6 +167,15 @@
     <!-- Video Feed Container (TikTok Vertical Carousel) -->
     <div id="feed-container" class="feed-container hidden" tabindex="0">
       <!-- Active video slides injected dynamically -->
+    </div>
+
+    <!-- Instagram-style Paused Center Overlay Indicator -->
+    <div id="paused-center-indicator" class="paused-center-indicator hidden" aria-label="Paused, click to resume">
+      <div class="paused-circle-icon">
+        <svg viewBox="0 0 24 24" width="38" height="38" fill="white">
+          <polygon points="7 4 20 12 7 20 7 4"></polygon>
+        </svg>
+      </div>
     </div>
 
     <!-- Floating Play/Pause Status Animation Indicator -->

@@ -48,19 +48,11 @@
 
   // Top Bar elements
   const btnPlaylistToggle = document.getElementById('btn-playlist-toggle');
+  const btnHeaderPlayPause = document.getElementById('btn-header-playpause');
+  const iconHeaderPause = document.getElementById('icon-header-pause');
+  const iconHeaderPlay = document.getElementById('icon-header-play');
   const counterCurrent = document.getElementById('counter-current');
   const counterTotal = document.getElementById('counter-total');
-
-  // Center Play / Pause button
-  const btnCenterPlayPause = document.getElementById('btn-center-playpause');
-  const iconCenterPlay = document.getElementById('icon-center-play');
-  const iconCenterPause = document.getElementById('icon-center-pause');
-
-  // Lower Controls: Left Rotate & Right Fullscreen
-  const btnRotate = document.getElementById('btn-rotate');
-  const btnFullscreen = document.getElementById('btn-fullscreen');
-  const iconFsEnter = document.getElementById('icon-fs-enter');
-  const iconFsExit = document.getElementById('icon-fs-exit');
 
   // Auto-Next & Loop elements
   const btnLoopMode = document.getElementById('btn-loop-mode');
@@ -502,7 +494,7 @@
       blankScreen.classList.remove('hidden');
       feedContainer.classList.add('hidden');
       pausedCenterIndicator.classList.add('hidden');
-      videoCounter.textContent = '0 / 0';
+      updateCounters();
       return;
     }
 
@@ -732,13 +724,15 @@
     state.isPlaying = isPlaying;
 
     if (isPlaying) {
-      if (iconCenterPlay) iconCenterPlay.classList.add('hidden');
-      if (iconCenterPause) iconCenterPause.classList.remove('hidden');
-      if (btnCenterPlayPause) btnCenterPlayPause.title = 'Pause Video (Space or Tap)';
+      if (iconHeaderPlay) iconHeaderPlay.classList.add('hidden');
+      if (iconHeaderPause) iconHeaderPause.classList.remove('hidden');
+      if (btnHeaderPlayPause) btnHeaderPlayPause.title = 'Pause Video (Space or Tap)';
+      if (pausedCenterIndicator) pausedCenterIndicator.classList.add('hidden');
     } else {
-      if (iconCenterPlay) iconCenterPlay.classList.remove('hidden');
-      if (iconCenterPause) iconCenterPause.classList.add('hidden');
-      if (btnCenterPlayPause) btnCenterPlayPause.title = 'Play Video (Space or Tap)';
+      if (iconHeaderPlay) iconHeaderPlay.classList.remove('hidden');
+      if (iconHeaderPause) iconHeaderPause.classList.add('hidden');
+      if (btnHeaderPlayPause) btnHeaderPlayPause.title = 'Play Video (Space or Tap)';
+      if (pausedCenterIndicator && state.videos.length > 0) pausedCenterIndicator.classList.remove('hidden');
       showControls(); // Keep controls visible when paused
     }
   }
@@ -1018,15 +1012,13 @@
     window.addEventListener('touchstart', triggerUserActivity, { passive: true });
     window.addEventListener('keydown', triggerUserActivity, { passive: true });
 
-    if (btnCenterPlayPause) btnCenterPlayPause.addEventListener('click', (e) => {
-      e.stopPropagation();
-      togglePlayPauseCurrent();
-      showControls();
-    });
-    if (btnRotate) btnRotate.addEventListener('click', (e) => {
-      e.stopPropagation();
-      rotateVideo();
-    });
+    if (btnHeaderPlayPause) {
+      btnHeaderPlayPause.addEventListener('click', (e) => {
+        e.stopPropagation();
+        togglePlayPauseCurrent();
+        showControls();
+      });
+    }
     if (btnMute) btnMute.addEventListener('click', toggleMute);
     if (btnFullscreen) btnFullscreen.addEventListener('click', toggleFullscreen);
 
