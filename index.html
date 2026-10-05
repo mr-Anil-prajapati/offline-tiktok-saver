@@ -37,17 +37,6 @@
             </svg>
           </button>
 
-          <!-- Top Bar Play / Pause Button (Perfect Circle) -->
-          <button id="btn-header-playpause" class="icon-btn" title="Play / Pause (Space or Tap Video)" aria-label="Play / Pause">
-            <svg id="icon-header-pause" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-              <rect x="6" y="4" width="4" height="16" rx="1"></rect>
-              <rect x="14" y="4" width="4" height="16" rx="1"></rect>
-            </svg>
-            <svg id="icon-header-play" class="hidden" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-              <polygon points="6 4 20 12 6 20 6 4"></polygon>
-            </svg>
-          </button>
-
           <!-- Video Counter: Perfect Round Pill -->
           <div id="video-counter" class="video-counter-pill" title="Current video / Total videos">
             <span id="counter-current">0</span><span class="counter-sep">/</span><span id="counter-total">0</span>
@@ -114,18 +103,42 @@
               <line x1="8" y1="23" x2="16" y2="23"></line>
             </svg>
           </button>
-
-          <!-- Fullscreen Button -->
-          <button id="btn-fullscreen" class="icon-btn" title="Toggle Fullscreen (F)" aria-label="Fullscreen">
-            <svg id="icon-fs-enter" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
-            </svg>
-            <svg id="icon-fs-exit" class="hidden" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
-            </svg>
-          </button>
         </div>
       </header>
+
+      <!-- Center Play / Pause Button Overlay (over the video) -->
+      <div class="center-playpause-overlay">
+        <button id="btn-center-playpause" class="center-play-btn" title="Play / Pause (Space or Tap)" aria-label="Play / Pause">
+          <svg id="icon-center-pause" viewBox="0 0 24 24" width="30" height="30" fill="currentColor">
+            <rect x="6" y="4" width="4" height="16" rx="1"></rect>
+            <rect x="14" y="4" width="4" height="16" rx="1"></rect>
+          </svg>
+          <svg id="icon-center-play" class="hidden" viewBox="0 0 24 24" width="30" height="30" fill="currentColor">
+            <polygon points="7 4 20 12 7 20 7 4"></polygon>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Lower Controls Bar: Rotate (left) + Fullscreen (right) -->
+      <div class="lower-controls-bar">
+        <!-- Rotate Video Button — lower left -->
+        <button id="btn-rotate" class="icon-btn lower-corner-btn" title="Rotate Video (R)" aria-label="Rotate">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+          </svg>
+        </button>
+
+        <!-- Fullscreen Button — lower right -->
+        <button id="btn-fullscreen" class="icon-btn lower-corner-btn" title="Toggle Fullscreen (F)" aria-label="Fullscreen">
+          <svg id="icon-fs-enter" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+          </svg>
+          <svg id="icon-fs-exit" class="hidden" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"></path>
+          </svg>
+        </button>
+      </div>
 
       <!-- Bottom Video Scrub / Progress Bar -->
       <div id="scrub-container" class="scrub-container">

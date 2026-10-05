@@ -48,11 +48,19 @@
 
   // Top Bar elements
   const btnPlaylistToggle = document.getElementById('btn-playlist-toggle');
-  const btnHeaderPlayPause = document.getElementById('btn-header-playpause');
-  const iconHeaderPause = document.getElementById('icon-header-pause');
-  const iconHeaderPlay = document.getElementById('icon-header-play');
   const counterCurrent = document.getElementById('counter-current');
   const counterTotal = document.getElementById('counter-total');
+
+  // Center Play / Pause Button (main video control)
+  const btnCenterPlayPause = document.getElementById('btn-center-playpause');
+  const iconCenterPlay = document.getElementById('icon-center-play');
+  const iconCenterPause = document.getElementById('icon-center-pause');
+
+  // Lower Bar: Rotate (left) + Fullscreen (right)
+  const btnRotate = document.getElementById('btn-rotate');
+  const btnFullscreen = document.getElementById('btn-fullscreen');
+  const iconFsEnter = document.getElementById('icon-fs-enter');
+  const iconFsExit = document.getElementById('icon-fs-exit');
 
   // Auto-Next & Loop elements
   const btnLoopMode = document.getElementById('btn-loop-mode');
@@ -64,16 +72,13 @@
   const btnMute = document.getElementById('btn-mute');
   const iconSoundOn = document.getElementById('icon-sound-on');
   const iconSoundOff = document.getElementById('icon-sound-off');
-  const btnFullscreen = document.getElementById('btn-fullscreen');
-  const iconFsEnter = document.getElementById('icon-fs-enter');
-  const iconFsExit = document.getElementById('icon-fs-exit');
 
   // Speed controls
   const btnSpeed = document.getElementById('btn-speed');
   const speedLabel = document.getElementById('speed-label');
   const speedDropdown = document.getElementById('speed-dropdown');
 
-  // Instagram-style paused center indicator
+  // Instagram-style paused center indicator (shown when controls are hidden)
   const pausedCenterIndicator = document.getElementById('paused-center-indicator');
 
   // Folder & File Inputs
@@ -727,14 +732,18 @@
     state.isPlaying = isPlaying;
 
     if (isPlaying) {
-      if (iconHeaderPlay) iconHeaderPlay.classList.add('hidden');
-      if (iconHeaderPause) iconHeaderPause.classList.remove('hidden');
-      if (btnHeaderPlayPause) btnHeaderPlayPause.title = 'Pause Video (Space or Tap)';
+      // Show pause icon in center (playing → user can pause)
+      if (iconCenterPlay) iconCenterPlay.classList.add('hidden');
+      if (iconCenterPause) iconCenterPause.classList.remove('hidden');
+      if (btnCenterPlayPause) btnCenterPlayPause.title = 'Pause (Space or Tap)';
+      // Hide the fallback paused indicator
       if (pausedCenterIndicator) pausedCenterIndicator.classList.add('hidden');
     } else {
-      if (iconHeaderPlay) iconHeaderPlay.classList.remove('hidden');
-      if (iconHeaderPause) iconHeaderPause.classList.add('hidden');
-      if (btnHeaderPlayPause) btnHeaderPlayPause.title = 'Play Video (Space or Tap)';
+      // Show play icon in center (paused → user can play)
+      if (iconCenterPlay) iconCenterPlay.classList.remove('hidden');
+      if (iconCenterPause) iconCenterPause.classList.add('hidden');
+      if (btnCenterPlayPause) btnCenterPlayPause.title = 'Play (Space or Tap)';
+      // Show fallback paused indicator (visible even when controls auto-hide)
       if (pausedCenterIndicator && state.videos.length > 0) pausedCenterIndicator.classList.remove('hidden');
       showControls(); // Keep controls visible when paused
     }
@@ -1017,11 +1026,17 @@
     window.addEventListener('touchstart', triggerUserActivity, { passive: true });
     window.addEventListener('keydown', triggerUserActivity, { passive: true });
 
-    if (btnHeaderPlayPause) {
-      btnHeaderPlayPause.addEventListener('click', (e) => {
+    if (btnCenterPlayPause) {
+      btnCenterPlayPause.addEventListener('click', (e) => {
         e.stopPropagation();
         togglePlayPauseCurrent();
         showControls();
+      });
+    }
+    if (btnRotate) {
+      btnRotate.addEventListener('click', (e) => {
+        e.stopPropagation();
+        rotateVideo();
       });
     }
     if (btnMute) btnMute.addEventListener('click', toggleMute);

@@ -36,6 +36,19 @@
   user-select: none;
 }
 
+/* Remove 300ms tap delay on all interactive elements */
+button, a, [role="button"] {
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+}
+
+/* Minimum touch target size 44×44px (Apple HIG) */
+button {
+  min-height: 44px;
+  min-width: 44px;
+  position: relative;
+}
+
 html, body {
   width: 100%;
   height: 100%;
@@ -47,6 +60,10 @@ html, body {
   font-size: 14px;
   line-height: 1.4;
   position: fixed;
+  /* Prevent elastic/rubber-band scroll on iOS */
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: auto;
+  touch-action: pan-x pan-y;
 }
 
 /* Ambient glow for wide screens & fullscreen */
@@ -170,11 +187,12 @@ body.is-fullscreen .video-slide.frame-landscape .video-element {
   gap: 8px;
 }
 
-/* Perfect Round Icon Buttons */
+/* Perfect Round Icon Buttons — override global min-height to stay circular */
 .icon-btn {
   background: rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   color: #FFFFFF;
   cursor: pointer;
   display: inline-flex;
@@ -182,11 +200,13 @@ body.is-fullscreen .video-slide.frame-landscape .video-element {
   justify-content: center;
   width: 38px;
   height: 38px;
-  min-width: 38px;
-  min-height: 38px;
+  min-width: 38px !important;
+  min-height: 38px !important;
   border-radius: 50%;
   flex-shrink: 0;
   transition: transform 0.15s ease, background-color 0.2s ease, border-color 0.2s ease;
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
 }
 
 .icon-btn:hover {
@@ -356,19 +376,20 @@ body.is-fullscreen .video-slide.frame-landscape .video-element {
   transform: scale(1.04);
 }
 
-/* Bottom Progress Scrubber */
+/* Bottom Progress Scrubber - taller hit area on mobile */
 .scrub-container {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  height: 24px;
+  height: 36px; /* was 24px — bigger touch target */
   display: flex;
   align-items: flex-end;
   cursor: pointer;
-  padding-bottom: env(safe-area-inset-bottom, 4px);
+  padding-bottom: max(env(safe-area-inset-bottom, 6px), 6px);
   pointer-events: auto;
-  background: linear-gradient(0deg, rgba(0, 0, 0, 0.6) 0%, transparent 100%);
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.65) 0%, transparent 100%);
+  touch-action: none; /* prevent scroll while scrubbing */
 }
 
 .scrub-track {
@@ -539,6 +560,9 @@ body.is-fullscreen .video-slide.frame-landscape .video-element {
   z-index: var(--z-video);
   outline: none;
   touch-action: pan-y;
+  /* Smooth momentum scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
 .feed-container::-webkit-scrollbar {
@@ -581,6 +605,9 @@ body.is-fullscreen .video-slide.frame-landscape .video-element {
   transform-origin: center center;
   will-change: transform;
   transition: transform 0.05s linear;
+  /* GPU acceleration for smooth pinch zoom */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 .video-element {
@@ -591,6 +618,11 @@ body.is-fullscreen .video-slide.frame-landscape .video-element {
   background: #000;
   object-fit: cover;
   transition: object-fit 0.25s ease;
+  /* Force GPU layer for smooth playback */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  /* Prevent iOS callout on long press */
+  -webkit-touch-callout: none;
 }
 
 /* Auto-detected frame modes */
@@ -630,50 +662,78 @@ body.is-fullscreen .video-slide.frame-landscape .video-element {
 }
 
 /* ==========================================================================
-   Instagram-style Paused Center Overlay Indicator
+   Center Play / Pause Button Overlay
    ========================================================================== */
-.paused-center-indicator {
+.center-playpause-overlay {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  z-index: 30;
-  cursor: pointer;
+  z-index: 28;
   pointer-events: auto;
-  user-select: none;
-  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.paused-center-indicator.hidden {
-  display: none !important;
-}
-
-.paused-circle-icon {
-  width: 76px;
-  height: 76px;
+.center-play-btn {
+  width: 68px;
+  height: 68px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.58);
-  backdrop-filter: blur(14px);
-  border: 2px solid rgba(255, 255, 255, 0.35);
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  color: #FFFFFF;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
+  cursor: pointer;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.65);
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+              background 0.2s ease,
+              border-color 0.2s ease;
 }
 
-.paused-circle-icon svg {
-  margin-left: 3px;
+.center-play-btn svg#icon-center-play {
+  margin-left: 3px; /* optical centering for play triangle */
 }
 
-.paused-circle-icon:hover {
+.center-play-btn:hover {
   transform: scale(1.1);
   background: rgba(0, 0, 0, 0.78);
-  border-color: rgba(255, 255, 255, 0.6);
+  border-color: rgba(255, 255, 255, 0.55);
 }
 
-.paused-circle-icon:active {
+.center-play-btn:active {
   transform: scale(0.92);
+}
+
+/* ==========================================================================
+   Lower Controls Bar — Rotate (bottom-left) + Fullscreen (bottom-right)
+   ========================================================================== */
+.lower-controls-bar {
+  position: absolute;
+  bottom: max(44px, calc(env(safe-area-inset-bottom, 0px) + 44px));
+  left: 14px;
+  right: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: var(--z-controls);
+  pointer-events: none;
+}
+
+.lower-corner-btn {
+  pointer-events: auto;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55);
+}
+
+.lower-corner-btn:hover svg {
+  transition: transform 0.25s ease;
+}
+
+/* Rotate icon spin-on-hover */
+#btn-rotate:hover svg {
+  transform: rotate(-90deg);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Floating animation feedback */
