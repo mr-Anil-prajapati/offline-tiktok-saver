@@ -518,7 +518,7 @@
       videoEl.muted = state.isMuted;
       videoEl.preload = Math.abs(index - targetIndex) <= 1 ? 'auto' : 'none';
       videoEl.src = video.url;
-      videoEl.loop = true;
+      videoEl.loop = (state.loopMode === 'single-loop');
       videoEl.playbackRate = state.playbackRate;
 
       const spinner = document.createElement('div');
@@ -585,8 +585,11 @@
     });
 
     // 1. INSTAGRAM-STYLE INSTANT TAP/CLICK PLAY-PAUSE
+    // Only used on PC (mouse click). Touch tap handled via touchend on feedContainer.
     videoEl.addEventListener('click', (e) => {
+      // On touch devices, touchend fires before click — we skip click if already handled
       if (state.currentScale > 1.05) return;
+      if (e.detail === 0) return; // fired by touch, skip (touchend already handled it)
       togglePlayPauseCurrent();
       showControls();
     });
@@ -857,26 +860,28 @@
         }
       }
 
-      // Instagram instant tap detection
-      if (e.touches.length === 0 && touchMovedDistance < 10 && state.currentScale <= 1.05) {
-        togglePlayPauseCurrent();
-        return;
-      }
-
-      // Vertical swipe between videos
-      if (e.touches.length === 0 && state.currentScale <= 1.08) {
+      if (e.touches.length === 0) {
         const touchEndY = e.changedTouches[0].clientY;
+        const touchEndX = e.changedTouches[0].clientX;
         const deltaY = touchEndY - touchStartY;
+        const deltaX = touchEndX - touchStartX;
         const deltaTime = Date.now() - touchStartTime;
+        const movedDist = Math.hypot(deltaX, deltaY);
 
-        if (Math.abs(deltaY) > 40 || (Math.abs(deltaY) > 20 && deltaTime < 250)) {
-          if (deltaY < 0) {
-            if (state.currentIndex < state.videos.length - 1) {
-              scrollToVideo(state.currentIndex + 1);
-            }
-          } else {
-            if (state.currentIndex > 0) {
-              scrollToVideo(state.currentIndex - 1);
+        // Instagram instant tap: short time, barely moved, not zoomed
+        if (movedDist < 12 && deltaTime < 300 && state.currentScale <= 1.05) {
+          togglePlayPauseCurrent();
+          showControls();
+          return;
+        }
+
+        // Vertical swipe between videos (not zoomed)
+        if (state.currentScale <= 1.08) {
+          if (Math.abs(deltaY) > 40 || (Math.abs(deltaY) > 20 && deltaTime < 250)) {
+            if (deltaY < 0) {
+              if (state.currentIndex < state.videos.length - 1) scrollToVideo(state.currentIndex + 1);
+            } else {
+              if (state.currentIndex > 0) scrollToVideo(state.currentIndex - 1);
             }
           }
         }
@@ -1106,6 +1111,17 @@
     const pct = Math.min(100, Math.max(0, (currentTime / duration) * 100));
     scrubProgress.style.width = `${pct}%`;
     scrubHandle.style.left = `${pct}%`;
+
+    // Update buffered range
+    const currentSlide = feedContainer.querySelector(`.video-slide[data-index="${state.currentIndex}"]`);
+    if (currentSlide) {
+      const videoEl = currentSlide.querySelector('video');
+      if (videoEl && videoEl.buffered.length > 0) {
+        const bufferedEnd = videoEl.buffered.end(videoEl.buffered.length - 1);
+        const bufferedPct = Math.min(100, (bufferedEnd / duration) * 100);
+        if (scrubBuffered) scrubBuffered.style.width = `${bufferedPct}%`;
+      }
+    }
   }
 
   /* ==========================================================================
@@ -1136,12 +1152,12 @@
     state.isFullscreen = isFs;
     if (isFs) {
       document.body.classList.add('is-fullscreen');
-      iconFsEnter.classList.add('hidden');
-      iconFsExit.classList.remove('hidden');
+      if (iconFsEnter) iconFsEnter.classList.add('hidden');
+      if (iconFsExit) iconFsExit.classList.remove('hidden');
     } else {
       document.body.classList.remove('is-fullscreen');
-      iconFsEnter.classList.remove('hidden');
-      iconFsExit.classList.add('hidden');
+      if (iconFsEnter) iconFsEnter.classList.remove('hidden');
+      if (iconFsExit) iconFsExit.classList.add('hidden');
     }
     recalculateAllVideoFrames();
   }
