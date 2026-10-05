@@ -108,6 +108,12 @@
   // Auto-hide controls timer
   let autoHideControlsTimeout = null;
 
+  // Touch & Scroll Coordination for Mobile Swipe Up / Down
+  let lastTouchEndTime = 0;
+  let lastTouchMovedDistance = 0;
+  let isProgrammaticScrolling = false;
+  let slideObserver = null;
+
   // Initialize App
   function init() {
     setupFolderLoading();
@@ -496,6 +502,10 @@
      ========================================================================== */
   function renderSlides(targetIndex = 0) {
     if (state.videos.length === 0) {
+      if (slideObserver) {
+        slideObserver.disconnect();
+        slideObserver = null;
+      }
       blankScreen.classList.remove('hidden');
       feedContainer.classList.add('hidden');
       pausedCenterIndicator.classList.add('hidden');
@@ -538,6 +548,7 @@
     });
 
     updateCounters();
+    setupSlideObserver();
     scrollToVideo(targetIndex, false);
   }
 
@@ -590,11 +601,11 @@
     });
 
     // 1. INSTAGRAM-STYLE INSTANT TAP/CLICK PLAY-PAUSE
-    // Only used on PC (mouse click). Touch tap handled via touchend on feedContainer.
+    // Mouse click on PC. Touch tap handled via touchend on appContainer.
     videoEl.addEventListener('click', (e) => {
-      // On touch devices, touchend fires before click — we skip click if already handled
+      // On touch devices, touchend fires before click — skip if recently handled by touch
+      if (Date.now() - lastTouchEndTime < 450) return;
       if (state.currentScale > 1.05) return;
-      if (e.detail === 0) return; // fired by touch, skip (touchend already handled it)
       togglePlayPauseCurrent();
       showControls();
     });
@@ -650,6 +661,33 @@
   /* ==========================================================================
      Navigation & Playback Control
      ========================================================================== */
+  function setupSlideObserver() {
+    if (!window.IntersectionObserver) return;
+    if (slideObserver) {
+      slideObserver.disconnect();
+      slideObserver = null;
+    }
+
+    slideObserver = new IntersectionObserver((entries) => {
+      if (isProgrammaticScrolling) return;
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          const idx = parseInt(entry.target.dataset.index, 10);
+          if (!isNaN(idx) && idx !== state.currentIndex && state.currentScale <= 1.05) {
+            state.currentIndex = idx;
+            updateActiveVideoState();
+          }
+        }
+      });
+    }, {
+      root: feedContainer,
+      threshold: 0.55
+    });
+
+    const slides = feedContainer.querySelectorAll('.video-slide');
+    slides.forEach(slide => slideObserver.observe(slide));
+  }
+
   function scrollToVideo(index, smooth = true) {
     if (index < 0 || index >= state.videos.length) return;
 
@@ -660,7 +698,14 @@
     const targetSlide = slides[index];
 
     if (targetSlide) {
-      targetSlide.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto' });
+      isProgrammaticScrolling = true;
+      feedContainer.scrollTo({
+        top: targetSlide.offsetTop,
+        behavior: smooth ? 'smooth' : 'auto'
+      });
+      setTimeout(() => {
+        isProgrammaticScrolling = false;
+      }, 450);
     }
 
     updateActiveVideoState();
@@ -786,7 +831,7 @@
   }
 
   /* ==========================================================================
-     2-Finger Pinch Zoom In / Out + Touch Gestures
+     2-Finger Pinch Zoom In / Out + Touch Gestures (Swipe Up / Down on Phone)
      ========================================================================== */
   function setupPinchZoomAndGestures() {
     let startDistance = 0;
@@ -799,6 +844,7 @@
     let startPanX = 0;
     let startPanY = 0;
     let touchMovedDistance = 0;
+    let touchIgnored = false;
 
     // Instagram paused center indicator tap
     if (pausedCenterIndicator) {
@@ -809,7 +855,16 @@
       });
     }
 
-    feedContainer.addEventListener('touchstart', (e) => {
+    // Attach to appContainer to capture all swipes anywhere on the screen (phone friendly)
+    appContainer.addEventListener('touchstart', (e) => {
+      // Don't intercept touches on interactive UI controls (drawer, buttons other than center play, scrub track)
+      const target = e.target;
+      const isInteractive = target.closest('button:not(#btn-center-playpause), input, .speed-dropdown, .drawer, #scrub-container');
+      if (isInteractive) {
+        touchIgnored = true;
+        return;
+      }
+      touchIgnored = false;
       showControls();
 
       if (e.touches.length === 2) {
@@ -828,11 +883,13 @@
         startPanY = state.panY;
         touchMovedDistance = 0;
       }
-    }, { passive: false });
+    }, { passive: true });
 
-    feedContainer.addEventListener('touchmove', (e) => {
+    appContainer.addEventListener('touchmove', (e) => {
+      if (touchIgnored) return;
+
       if (e.touches.length === 2) {
-        e.preventDefault();
+        if (e.cancelable) e.preventDefault();
         const currentDistance = Math.hypot(
           e.touches[0].clientX - e.touches[1].clientX,
           e.touches[0].clientY - e.touches[1].clientY
@@ -850,7 +907,7 @@
         touchMovedDistance = Math.hypot(deltaX, deltaY);
 
         if (state.currentScale > 1.08) {
-          e.preventDefault();
+          if (e.cancelable) e.preventDefault();
           const maxPanX = (feedContainer.clientWidth * (state.currentScale - 1)) / 2;
           const maxPanY = (feedContainer.clientHeight * (state.currentScale - 1)) / 2;
 
@@ -861,7 +918,12 @@
       }
     }, { passive: false });
 
-    feedContainer.addEventListener('touchend', (e) => {
+    appContainer.addEventListener('touchend', (e) => {
+      if (touchIgnored) return;
+
+      lastTouchEndTime = Date.now();
+      lastTouchMovedDistance = touchMovedDistance;
+
       if (isPinching && e.touches.length < 2) {
         isPinching = false;
         if (state.currentScale <= 1.08) {
@@ -878,20 +940,44 @@
         const movedDist = Math.hypot(deltaX, deltaY);
 
         // Instagram instant tap: short time, barely moved, not zoomed
-        if (movedDist < 12 && deltaTime < 300 && state.currentScale <= 1.05) {
-          togglePlayPauseCurrent();
-          showControls();
+        if (movedDist < 16 && deltaTime < 350 && state.currentScale <= 1.05) {
+          const isCenterBtn = e.target.closest('#btn-center-playpause');
+          if (!isCenterBtn && state.videos.length > 0) {
+            togglePlayPauseCurrent();
+            showControls();
+          }
           return;
         }
 
-        // Vertical swipe between videos (not zoomed)
-        if (state.currentScale <= 1.08) {
-          if (Math.abs(deltaY) > 40 || (Math.abs(deltaY) > 20 && deltaTime < 250)) {
-            if (deltaY < 0) {
-              if (state.currentIndex < state.videos.length - 1) scrollToVideo(state.currentIndex + 1);
-            } else {
-              if (state.currentIndex > 0) scrollToVideo(state.currentIndex - 1);
+        // Vertical swipe between videos (phone swipe up = next, swipe down = prev)
+        if (state.currentScale <= 1.08 && state.videos.length > 0) {
+          const isVertical = Math.abs(deltaY) > Math.abs(deltaX) * 1.1;
+          const isQuickFlick = Math.abs(deltaY) > 25 && deltaTime < 320;
+          const isSubstantialSwipe = Math.abs(deltaY) > 42;
+
+          if (isVertical && (isQuickFlick || isSubstantialSwipe)) {
+            if (navigator.vibrate) {
+              try { navigator.vibrate(10); } catch (_) {}
             }
+
+            if (deltaY < 0) {
+              // SWIPE UP -> NEXT VIDEO
+              if (state.currentIndex < state.videos.length - 1) {
+                scrollToVideo(state.currentIndex + 1);
+              } else if (state.loopMode === 'auto-next') {
+                scrollToVideo(0);
+              } else {
+                showToast('Last video');
+              }
+            } else {
+              // SWIPE DOWN -> PREVIOUS VIDEO
+              if (state.currentIndex > 0) {
+                scrollToVideo(state.currentIndex - 1);
+              } else {
+                showToast('First video');
+              }
+            }
+            showControls();
           }
         }
       }
@@ -957,8 +1043,10 @@
       }
     });
 
+    // Fallback scroll listener for browsers without IntersectionObserver
     let scrollTimeout;
     feedContainer.addEventListener('scroll', () => {
+      if (window.IntersectionObserver || isProgrammaticScrolling) return;
       clearTimeout(scrollTimeout);
       scrollTimeout = setTimeout(() => {
         if (state.currentScale > 1.05) return;
@@ -1029,6 +1117,10 @@
     if (btnCenterPlayPause) {
       btnCenterPlayPause.addEventListener('click', (e) => {
         e.stopPropagation();
+        // If the user just performed a swipe gesture starting near center, don't trigger click!
+        if (lastTouchMovedDistance > 16 && (Date.now() - lastTouchEndTime) < 450) {
+          return;
+        }
         togglePlayPauseCurrent();
         showControls();
       });

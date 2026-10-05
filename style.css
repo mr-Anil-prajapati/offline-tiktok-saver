@@ -163,7 +163,7 @@ body.is-fullscreen .video-slide.frame-landscape .video-element {
 
 .controls-layer.visible {
   opacity: 1;
-  pointer-events: auto;
+  pointer-events: none; /* Keep none so swipe/tap touches reach the video feed underneath! */
 }
 
 /* Top Navigation Bar */
@@ -578,6 +578,8 @@ body.is-fullscreen .video-slide.frame-landscape .video-element {
   width: 100%;
   height: 100%;
   height: 100dvh;
+  min-height: 100%;
+  min-height: 100dvh;
   position: relative;
   scroll-snap-align: start;
   scroll-snap-stop: always;
@@ -586,6 +588,7 @@ body.is-fullscreen .video-slide.frame-landscape .video-element {
   justify-content: center;
   background: #000;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 @media (min-width: 768px) {
@@ -670,7 +673,7 @@ body.is-fullscreen .video-slide.frame-landscape .video-element {
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 28;
-  pointer-events: auto;
+  pointer-events: none; /* Pass touches through, only center button captures */
 }
 
 .center-play-btn {
